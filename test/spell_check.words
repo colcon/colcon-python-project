@@ -30,6 +30,7 @@ scspell
 sdist
 setuptools
 subpath
+symlink
 tempfile
 thomas
 todo
