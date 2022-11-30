@@ -3,6 +3,7 @@ asyncio
 backend
 backends
 colcon
+configparser
 contextlib
 cottsay
 decoree
@@ -13,10 +14,14 @@ fdopen
 functools
 importlib
 iterdir
+libdir
+namelist
 noqa
 partialmethod
 pathlib
+platlib
 plugin
+purelib
 pyproject
 pytest
 returncode
@@ -24,6 +29,7 @@ rtype
 scspell
 sdist
 setuptools
+subpath
 tempfile
 thomas
 todo
@@ -31,3 +37,4 @@ toml
 tomli
 tomllib
 traceback
+zipfile
