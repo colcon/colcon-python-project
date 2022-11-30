@@ -3,6 +3,8 @@ asyncio
 backend
 colcon
 contextlib
+cottsay
+decoree
 deps
 distinfo
 fdopen
@@ -16,10 +18,13 @@ plugin
 pyproject
 pytest
 returncode
+rtype
 scspell
 sdist
 setuptools
+tempfile
 thomas
+todo
 toml
 tomli
 tomllib
