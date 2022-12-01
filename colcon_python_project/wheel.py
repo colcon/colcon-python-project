@@ -17,12 +17,14 @@ def _get_install_path(key, install_base):
     return get_python_install_path(key, {'base': str(install_base)})
 
 
-def install_wheel(wheel_path, install_base):
+def install_wheel(wheel_path, install_base, script_dir_override=None):
     """
     Install a wheel file under the given installation base directory.
 
     :param wheel_path: Path to the wheel file to be installed.
     :param install_base: Path to the base directory to install under.
+    :param script_dir_override: Override the default script install
+      directory
     """
     wheel_name = wheel_path.name.split('-')
     if len(wheel_name) not in (5, 6):
@@ -77,7 +79,10 @@ def install_wheel(wheel_path, install_base):
                 with TextIOWrapper(wf_ep_bin) as wf_ep:
                     ep.read_file(wf_ep)
             if ep.has_section('console_scripts'):
-                script_dir = _get_install_path('scripts', install_base)
+                if script_dir_override:
+                    script_dir = install_base / script_dir_override
+                else:
+                    script_dir = _get_install_path('scripts', install_base)
                 sm = ScriptMaker(None, script_dir)
                 sm.clobber = True
                 sm.variants = {''}

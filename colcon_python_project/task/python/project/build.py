@@ -1,6 +1,7 @@
 # Copyright 2022 Open Source Robotics Foundation, Inc.
 # Licensed under the Apache License, Version 2.0
 
+from configparser import ConfigParser
 import logging
 from pathlib import Path
 from subprocess import CalledProcessError
@@ -40,6 +41,34 @@ class PythonProjectBuildTask(TaskExtensionPoint):
 
         logger.info(f"Building Python project in '{args.path}'")
 
+        script_dir_override = None
+        setup_cfg_path = pkg.path / 'setup.cfg'
+        if setup_cfg_path.is_file():
+            parser = ConfigParser()
+            with setup_cfg_path.open() as f:
+                parser.read_file(f)
+            if args.symlink_install:
+                script_dir_override = parser.get(
+                    'develop', 'script-dir', fallback=None)
+                if not script_dir_override:
+                    script_dir_override = parser.get(
+                        'develop', 'script_dir', fallback=None)
+            else:
+                script_dir_override = parser.get(
+                    'install', 'install-scripts', fallback=None)
+                if not script_dir_override:
+                    script_dir_override = parser.get(
+                        'install', 'install_scripts', fallback=None)
+
+            # Resolve setuptools-specific syntax
+            if script_dir_override:
+                _override = Path(args.install_base)
+                for part in Path(script_dir_override).parts:
+                    if part == '$base':
+                        part = args.install_base
+                    _override /= part
+                script_dir_override = _override
+
         env = await get_command_environment(
             'python_project', args.build_base, self.context.dependencies)
 
@@ -59,7 +88,9 @@ class PythonProjectBuildTask(TaskExtensionPoint):
             return e.returncode
 
         wheel_path = wheel_directory / wheel_name
-        install_wheel(wheel_path, args.install_base)
+        install_wheel(
+            wheel_path, args.install_base,
+            script_dir_override=script_dir_override)
 
         hooks = create_environment_hooks(args.install_base, pkg.name)
         create_environment_scripts(
