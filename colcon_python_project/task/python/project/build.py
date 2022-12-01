@@ -77,8 +77,7 @@ class PythonProjectBuildTask(TaskExtensionPoint):
             stderr_callback=self._stderr_callback)
 
         wheel_directory = Path(args.build_base) / 'wheel'
-        if not wheel_directory.is_dir():
-            wheel_directory.mkdir()
+        wheel_directory.mkdir(parents=True, exist_ok=True)
         try:
             if args.symlink_install:
                 logger.warn(f'Symlink install is not supported by {__name__}')
