@@ -44,9 +44,10 @@ class PEP517PackageIdentification(PackageIdentificationExtensionPoint):
         if desc.type is not None and desc.type != 'python.project':
             return
 
-        spec_file = desc.path / SPEC_NAME
-        if not spec_file.is_file():
-            return
+        if desc.type is None:
+            spec_file = desc.path / SPEC_NAME
+            if not spec_file.is_file():
+                return
 
         loop = new_event_loop()
         try:
