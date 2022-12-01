@@ -102,6 +102,14 @@ def get_hook_caller(desc, **kwargs):
     :param desc: The package descriptor
     """
     spec = load_and_cache_spec(desc)
+    backend_path = spec['build-system'].get('backend-path')
+    if backend_path:
+        # TODO(cottsay): This isn't *technically* the beginning of sys.path
+        #                as PEP 517 calls for, but it's pretty darn close.
+        kwargs['env'] = dict(kwargs.get('env', os.environ))
+        pythonpath = kwargs['env'].get('PYTHONPATH', '')
+        kwargs['env']['PYTHONPATH'] = os.pathsep.join(
+            backend_path + ([pythonpath] if pythonpath else []))
     return AsyncHookCaller(
         spec['build-system']['build-backend'],
         project_path=desc.path, **kwargs)

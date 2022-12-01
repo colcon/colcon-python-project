@@ -24,6 +24,7 @@ plugin
 purelib
 pyproject
 pytest
+pythonpath
 returncode
 rtype
 scspell
