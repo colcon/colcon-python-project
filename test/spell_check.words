@@ -5,12 +5,15 @@ backends
 colcon
 configparser
 contextlib
+copyfileobj
 cottsay
 decoree
 deps
 distinfo
 distlib
 fdopen
+fdst
+fsrc
 functools
 importlib
 iterdir
@@ -25,6 +28,7 @@ purelib
 pyproject
 pytest
 pythonpath
+relpath
 returncode
 rtype
 scspell

@@ -4,7 +4,9 @@
 from configparser import ConfigParser
 from email import message_from_binary_file
 from io import TextIOWrapper
+import os.path
 from pathlib import Path
+import shutil
 import warnings
 from zipfile import ZIP_DEFLATED
 from zipfile import ZipFile
@@ -70,8 +72,11 @@ def install_wheel(wheel_path, install_base, script_dir_override=None):
             _, key, subpath = record[0].split('/', 2)
             target = Path(_get_install_path(key, install_base))
             target /= subpath
-            wf.extract(record[0], str(target))
-            record[0] = target.relative_to(libdir)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            with wf.open(record[0]) as fsrc:
+                with target.open('wb') as fdst:
+                    shutil.copyfileobj(fsrc, fdst)
+            record[0] = os.path.relpath(target, start=libdir)
 
         if entry_points_file in wf.namelist():
             ep = ConfigParser()
@@ -91,3 +96,7 @@ def install_wheel(wheel_path, install_base, script_dir_override=None):
                     for pair in ep.items('console_scripts')
                 ]
                 sm.make_multiple(specs)
+
+                # TODO(cottsay): Add scripts to records
+
+        # TODO(cottsay): Write out records to RECORDS file
