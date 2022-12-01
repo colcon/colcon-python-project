@@ -8,7 +8,6 @@ Extensions for `colcon-core <https://github.com/colcon/colcon-core>`_ to work wi
 
 TODO
 ----
-* Install RECORD file
 * Graceful and informational error handling
 * Finish PEP 660 (symlink) installs
 

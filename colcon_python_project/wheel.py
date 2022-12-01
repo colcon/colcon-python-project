@@ -60,7 +60,7 @@ def install_wheel(wheel_path, install_base, script_dir_override=None):
             with TextIOWrapper(wf_rec_bin) as wf_rec:
                 for line in wf_rec:
                     if ',' in line:
-                        records.append(line.split(','))
+                        records.append(line.strip().split(','))
 
         for record in records:
             if record[0] == record_file:
@@ -95,8 +95,12 @@ def install_wheel(wheel_path, install_base, script_dir_override=None):
                     '%s = %s' % pair
                     for pair in ep.items('console_scripts')
                 ]
-                sm.make_multiple(specs)
+                scripts_made = sm.make_multiple(specs)
 
-                # TODO(cottsay): Add scripts to records
+                records += [
+                    (Path(os.path.relpath(s, libdir)).as_posix(), '', '')
+                    for s in scripts_made
+                ]
 
-        # TODO(cottsay): Write out records to RECORDS file
+        with (libdir / record_file).open('w') as f:
+            f.writelines(','.join(rec) + '\n' for rec in records)
