@@ -21,6 +21,7 @@ iterdir
 libdir
 namelist
 noqa
+osfhandle
 partialmethod
 pathlib
 platlib

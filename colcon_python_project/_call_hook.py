@@ -9,6 +9,13 @@ import sys
 
 if __name__ == '__main__':
     backend_name, hook_name, child_in, child_out = sys.argv[1:]
+    try:
+        import msvcrt
+    except ImportError:
+        pass
+    else:
+        child_in = msvcrt.open_osfhandle(int(child_in), os.O_RDONLY)
+        child_out = msvcrt.open_osfhandle(int(child_out), 0)
     if ':' in backend_name:
         backend_module_name, backend_object_name = backend_name.split(':', 2)
         backend_module = import_module(backend_module_name)

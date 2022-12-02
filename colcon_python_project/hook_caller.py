@@ -15,9 +15,21 @@ class _SubprocessTransport(AbstractContextManager):
 
     def __enter__(self):
         self.child_in, self.parent_out = os.pipe()
-        os.set_inheritable(self.child_in, True)
         self.parent_in, self.child_out = os.pipe()
-        os.set_inheritable(self.child_out, True)
+
+        try:
+            import msvcrt
+        except ImportError:
+            os.set_inheritable(self.child_in, True)
+            self.pass_in = self.child_in
+            os.set_inheritable(self.child_out, True)
+            self.pass_out = self.child_out
+        else:
+            self.pass_in = msvcrt.get_osfhandle(self.child_in)
+            os.set_handle_inheritable(self.pass_in, True)
+            self.pass_out = msvcrt.get_osfhandle(self.child_out)
+            os.set_handle_inheritable(self.pass_out, True)
+
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -64,7 +76,7 @@ class AsyncHookCaller:
             args = [
                 sys.executable, '-m', 'colcon_python_project._call_hook',
                 self._backend_name, hook_name,
-                str(transport.child_in), str(transport.child_out)]
+                str(transport.pass_in), str(transport.pass_out)]
             with os.fdopen(os.dup(transport.parent_out), 'wb') as f:
                 pickle.dump(kwargs, f)
             have_callbacks = self._stdout_callback or self._stderr_callback
