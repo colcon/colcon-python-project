@@ -1,6 +1,8 @@
 # Copyright 2022 Open Source Robotics Foundation, Inc.
 # Licensed under the Apache License, Version 2.0
 
+import sys
+
 from colcon_python_project.hook_caller import AsyncHookCaller
 import pytest
 
@@ -37,7 +39,8 @@ def mock_project(tmp_path):
 @pytest.mark.asyncio
 async def test_build_wheel(mock_project, tmp_path):
     hook_caller = AsyncHookCaller(
-        _BACKEND_NAME, project_path=mock_project)
+        _BACKEND_NAME, project_path=mock_project,
+        stderr_callback=sys.stderr.buffer.write)
     wheel = await hook_caller.build_wheel(wheel_directory=str(tmp_path))
     assert isinstance(wheel, str)
     assert (tmp_path / wheel).is_file()
@@ -46,7 +49,8 @@ async def test_build_wheel(mock_project, tmp_path):
 @pytest.mark.asyncio
 async def test_build_sdist(mock_project, tmp_path):
     hook_caller = AsyncHookCaller(
-        _BACKEND_NAME, project_path=mock_project)
+        _BACKEND_NAME, project_path=mock_project,
+        stderr_callback=sys.stderr.buffer.write)
     sdist = await hook_caller.build_sdist(sdist_directory=str(tmp_path))
     assert isinstance(sdist, str)
     assert (tmp_path / sdist).is_file()
@@ -55,7 +59,8 @@ async def test_build_sdist(mock_project, tmp_path):
 @pytest.mark.asyncio
 async def test_get_requires_for_build_wheel(mock_project):
     hook_caller = AsyncHookCaller(
-        _BACKEND_NAME, project_path=mock_project)
+        _BACKEND_NAME, project_path=mock_project,
+        stderr_callback=sys.stderr.buffer.write)
     requires = await hook_caller.get_requires_for_build_wheel()
     assert isinstance(requires, list)
 
@@ -63,7 +68,8 @@ async def test_get_requires_for_build_wheel(mock_project):
 @pytest.mark.asyncio
 async def test_prepare_metadata_for_build_wheel(mock_project, tmp_path):
     hook_caller = AsyncHookCaller(
-        _BACKEND_NAME, project_path=mock_project)
+        _BACKEND_NAME, project_path=mock_project,
+        stderr_callback=sys.stderr.buffer.write)
     distinfo = await hook_caller.prepare_metadata_for_build_wheel(
         metadata_directory=str(tmp_path))
     assert isinstance(distinfo, str)
@@ -73,7 +79,8 @@ async def test_prepare_metadata_for_build_wheel(mock_project, tmp_path):
 @pytest.mark.asyncio
 async def test_get_requires_for_build_sdist(mock_project):
     hook_caller = AsyncHookCaller(
-        _BACKEND_NAME, project_path=mock_project)
+        _BACKEND_NAME, project_path=mock_project,
+        stderr_callback=sys.stderr.buffer.write)
     requires = await hook_caller.get_requires_for_build_sdist()
     assert isinstance(requires, list)
 
@@ -82,7 +89,8 @@ async def test_get_requires_for_build_sdist(mock_project):
 @pytest.mark.skip(reason='Insufficient setuptools version')
 async def test_build_editable(mock_project, tmp_path):
     hook_caller = AsyncHookCaller(
-        _BACKEND_NAME, project_path=mock_project)
+        _BACKEND_NAME, project_path=mock_project,
+        stderr_callback=sys.stderr.buffer.write)
     wheel = await hook_caller.build_editable(
         wheel_directory=str(tmp_path))
     assert isinstance(wheel, str)
@@ -93,7 +101,8 @@ async def test_build_editable(mock_project, tmp_path):
 @pytest.mark.skip(reason='Insufficient setuptools version')
 async def test_get_requires_for_build_editable(mock_project):
     hook_caller = AsyncHookCaller(
-        _BACKEND_NAME, project_path=mock_project)
+        _BACKEND_NAME, project_path=mock_project,
+        stderr_callback=sys.stderr.buffer.write)
     requires = await hook_caller.get_requires_for_build_editable()
     assert isinstance(requires, list)
 
@@ -102,7 +111,8 @@ async def test_get_requires_for_build_editable(mock_project):
 @pytest.mark.skip(reason='Insufficient setuptools version')
 async def test_prepare_metadata_for_build_editable(mock_project, tmp_path):
     hook_caller = AsyncHookCaller(
-        _BACKEND_NAME, project_path=mock_project)
+        _BACKEND_NAME, project_path=mock_project,
+        stderr_callback=sys.stderr.buffer.write)
     dist_info = await hook_caller.prepare_metadata_for_build_editable(
         metadata_directory=str(tmp_path))
     assert isinstance(dist_info, str)
