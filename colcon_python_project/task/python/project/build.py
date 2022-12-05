@@ -3,6 +3,7 @@
 
 from configparser import ConfigParser
 import logging
+import os.path
 from pathlib import Path
 from subprocess import CalledProcessError
 
@@ -87,13 +88,29 @@ class PythonProjectBuildTask(TaskExtensionPoint):
             return e.returncode
 
         wheel_path = wheel_directory / wheel_name
-        install_wheel(
+        record_file = install_wheel(
             wheel_path, args.install_base,
             script_dir_override=script_dir_override)
 
+        libdir = record_file.parent.parent
+        records = []
+
         hooks = create_environment_hooks(args.install_base, pkg.name)
-        create_environment_scripts(
+        records += [
+            (Path(os.path.relpath(hook, libdir)).as_posix(), '', '')
+            for hook in hooks
+        ]
+
+        scripts = create_environment_scripts(
             pkg, args, default_hooks=hooks, additional_hooks=additional_hooks)
+        if scripts:
+            records += [
+                (Path(os.path.relpath(script, libdir)).as_posix(), '', '')
+                for script in scripts
+            ]
+
+        with record_file.open('a') as f:
+            f.writelines(','.join(rec) + '\n' for rec in records)
 
     def _stdout_callback(self, line):
         self.context.put_event_into_queue(StdoutLine(line))
