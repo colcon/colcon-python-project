@@ -16,6 +16,7 @@ fdopen
 fdst
 fsrc
 functools
+hashlib
 importlib
 iterdir
 libdir
@@ -32,6 +33,7 @@ pytest
 pythonpath
 relpath
 returncode
+rstrip
 rtype
 scspell
 sdist
@@ -45,4 +47,5 @@ toml
 tomli
 tomllib
 traceback
+urlsafe
 zipfile

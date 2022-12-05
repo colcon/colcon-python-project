@@ -1,8 +1,10 @@
 # Copyright 2022 Open Source Robotics Foundation, Inc.
 # Licensed under the Apache License, Version 2.0
 
+from base64 import urlsafe_b64encode
 from configparser import ConfigParser
 from email import message_from_binary_file
+from hashlib import sha256
 from io import TextIOWrapper
 import os.path
 from pathlib import Path
@@ -17,6 +19,26 @@ from distlib.scripts import ScriptMaker
 
 def _get_install_path(key, install_base):
     return get_python_install_path(key, {'base': str(install_base)})
+
+
+def write_and_record(libdir, path, lines):
+    """
+    Write file content to disk and compute a fully-qualified RECORD entry.
+
+    :param libdir: The library directory where the package is installed.
+    :param path: Path to the file to be written, either absolute or
+      relative to the library directory.
+    :param lines: Enumerable of lines of text to be written.
+    :returns: Three-element tuple constituting the file's RECORD entry.
+    """
+    path = libdir / path
+    raw = (os.linesep.join(lines) + os.linesep).encode()
+    digest = urlsafe_b64encode(sha256(raw).digest()).rstrip(b'=').decode()
+    path.write_bytes(raw)
+    return (
+        Path(os.path.relpath(path, libdir)).as_posix(),
+        f'sha256={digest}',
+        f'{len(raw)}')
 
 
 def install_wheel(wheel_path, install_base, script_dir_override=None):
@@ -77,6 +99,11 @@ def install_wheel(wheel_path, install_base, script_dir_override=None):
                 with target.open('wb') as fdst:
                     shutil.copyfileobj(fsrc, fdst)
             record[0] = os.path.relpath(target, start=libdir)
+
+        records.append(write_and_record(
+            libdir,
+            dist_info_dir + 'INSTALLER',
+            ('colcon-python-project',)))
 
         if entry_points_file in wf.namelist():
             ep = ConfigParser()
