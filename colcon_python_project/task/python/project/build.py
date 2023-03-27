@@ -103,11 +103,10 @@ class PythonProjectBuildTask(TaskExtensionPoint):
 
         scripts = create_environment_scripts(
             pkg, args, default_hooks=hooks, additional_hooks=additional_hooks)
-        if scripts:
-            records += [
-                (Path(os.path.relpath(script, libdir)).as_posix(), '', '')
-                for script in scripts
-            ]
+        records += [
+            (Path(os.path.relpath(script, libdir)).as_posix(), '', '')
+            for script in scripts
+        ]
 
         with record_file.open('a') as f:
             f.writelines(','.join(rec) + '\n' for rec in records)
