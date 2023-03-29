@@ -88,11 +88,11 @@ class PythonProjectBuildTask(TaskExtensionPoint):
             return e.returncode
 
         wheel_path = wheel_directory / wheel_name
-        record_file = install_wheel(
+        dist_info_dir = install_wheel(
             wheel_path, args.install_base,
             script_dir_override=script_dir_override)
 
-        libdir = record_file.parent.parent
+        libdir = dist_info_dir.parent
         records = []
 
         hooks = create_environment_hooks(args.install_base, pkg.name)
@@ -108,7 +108,7 @@ class PythonProjectBuildTask(TaskExtensionPoint):
             for script in scripts
         ]
 
-        with record_file.open('a') as f:
+        with (dist_info_dir / 'RECORD').open('a') as f:
             f.writelines(','.join(rec) + '\n' for rec in records)
 
     def _stdout_callback(self, line):

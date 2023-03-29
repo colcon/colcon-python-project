@@ -49,7 +49,7 @@ def install_wheel(wheel_path, install_base, script_dir_override=None):
     :param install_base: Path to the base directory to install under.
     :param script_dir_override: Override the default script install
       directory
-    :returns: Path to the installed RECORD file
+    :returns: Path to the installed distribution info directory
     """
     wheel_name = wheel_path.name.split('-')
     if len(wheel_name) not in (5, 6):
@@ -133,4 +133,4 @@ def install_wheel(wheel_path, install_base, script_dir_override=None):
         with (libdir / record_file).open('w') as f:
             f.writelines(','.join(rec) + '\n' for rec in records)
 
-        return libdir / record_file
+        return libdir / dist_info_dir
