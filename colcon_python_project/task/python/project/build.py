@@ -80,10 +80,18 @@ class PythonProjectBuildTask(TaskExtensionPoint):
         wheel_directory = Path(args.build_base) / 'wheel'
         wheel_directory.mkdir(parents=True, exist_ok=True)
         try:
+            build_hook_name = 'build_wheel'
             if args.symlink_install:
-                logger.warn(f'Symlink install is not supported by {__name__}')
-            wheel_name = await hook_caller.build_wheel(
-                wheel_directory=wheel_directory)
+                hook_names = await hook_caller.list_hooks()
+                if 'build_editable' in hook_names:
+                    build_hook_name = 'build_editable'
+                else:
+                    logger.info(
+                        f"Backend '{hook_caller.backend_name}' does not "
+                        'support --symlink-install - falling back to regular '
+                        "build for package '{pkg.name}'")
+            wheel_name = await hook_caller.call_hook(
+                build_hook_name, wheel_directory=wheel_directory)
         except CalledProcessError as e:
             return e.returncode
 
@@ -107,6 +115,17 @@ class PythonProjectBuildTask(TaskExtensionPoint):
             (Path(os.path.relpath(script, libdir)).as_posix(), '', '')
             for script in scripts
         ]
+
+        if build_hook_name == 'build_editable':
+            # PEP 610
+            direct_url_json = dist_info_dir / 'direct_url.json'
+            with direct_url_json.open('w') as f:
+                f.write(
+                    f'{{"url":"{pkg.path.absolute().as_uri()}",'
+                    '"dir_info":{"editable":true}}\n')
+            records.append((
+                Path(os.path.relpath(direct_url_json, libdir)).as_posix(),
+                '', ''))
 
         with (dist_info_dir / 'RECORD').open('a') as f:
             f.writelines(','.join(rec) + '\n' for rec in records)

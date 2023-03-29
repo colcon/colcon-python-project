@@ -9,9 +9,9 @@ Extensions for `colcon-core <https://github.com/colcon/colcon-core>`_ to work wi
 TODO
 ----
 * Graceful and informational error handling
-* Finish PEP 660 (symlink) installs
 
 Idiosyncrasies
 --------------
 * For setuptools-based packages, setuptools (< 64.0.0) will leave build artifacts in the source directory.
+* For setuptools-based packages, symlink installs always print warnings to stderr with no good way to suppress them.
 * For poetry-based packages, dependencies expressed in groups (including 'test') are not discovered (use 'test' extra as a workaround).
