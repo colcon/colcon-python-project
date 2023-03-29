@@ -33,8 +33,12 @@ async def load_and_cache_metadata(desc):
 
     :param desc: The package descriptor
     """
-    metadata = desc.metadata.get('python_project_metadata')
-    if metadata is None:
+    get_metadata = desc.metadata.get('get_python_project_metadata')
+    if get_metadata is None:
         metadata = await load_metadata(desc)
-        desc.metadata['python_project_metadata'] = metadata
-    return metadata
+
+        def get_metadata():
+            return metadata
+
+        desc.metadata['get_python_project_metadata'] = get_metadata
+    return get_metadata()
