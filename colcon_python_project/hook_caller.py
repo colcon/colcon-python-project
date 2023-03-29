@@ -66,6 +66,28 @@ class AsyncHookCaller:
         """Get the name of the backend to call hooks on."""
         return self._backend_name
 
+    async def list_hooks(self):
+        """
+        Call into the backend to list implemented hooks.
+
+        This function lists all callable methods on the backend, which may
+        include more than just the hook names.
+
+        :returns: List of hook names.
+        """
+        args = [
+            sys.executable, '-m', 'colcon_python_project._list_hooks',
+            self._backend_name]
+        process = await run(
+            args, None, self._stderr_callback,
+            cwd=self._project_path, env=self._env,
+            capture_output=True)
+        process.check_returncode()
+        hook_names = [
+            line.strip().decode() for line in process.stdout.splitlines()]
+        return [
+            hook for hook in hook_names if hook and not hook.startswith('_')]
+
     async def call_hook(self, hook_name, **kwargs):
         """
         Call the given hook with given arguments.

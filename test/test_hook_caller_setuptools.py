@@ -117,3 +117,14 @@ async def test_prepare_metadata_for_build_editable(mock_project, tmp_path):
         metadata_directory=str(tmp_path))
     assert isinstance(dist_info, str)
     assert (tmp_path / dist_info).is_dir()
+
+
+@pytest.mark.asyncio
+async def test_list_hooks(mock_project):
+    hook_caller = AsyncHookCaller(
+        _BACKEND_NAME, project_path=mock_project,
+        stderr_callback=sys.stderr.buffer.write)
+    hook_names = await hook_caller.list_hooks()
+    assert isinstance(hook_names, list)
+    assert 'build_sdist' in hook_names
+    assert 'build_wheel' in hook_names
