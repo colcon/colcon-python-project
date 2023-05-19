@@ -8,6 +8,8 @@ import pickle
 import sys
 
 from colcon_core.subprocess import run
+from colcon_python_project.hook_caller import _call_hook
+from colcon_python_project.hook_caller import _list_hooks
 from colcon_python_project.spec import load_and_cache_spec
 
 
@@ -76,7 +78,7 @@ class AsyncHookCaller:
         :returns: List of hook names.
         """
         args = [
-            sys.executable, '-m', 'colcon_python_project._list_hooks',
+            sys.executable, _list_hooks.__file__,
             self._backend_name]
         process = await run(
             args, None, self._stderr_callback,
@@ -96,7 +98,7 @@ class AsyncHookCaller:
         """
         with _SubprocessTransport() as transport:
             args = [
-                sys.executable, '-m', 'colcon_python_project._call_hook',
+                sys.executable, _call_hook.__file__,
                 self._backend_name, hook_name,
                 str(transport.pass_in), str(transport.pass_out)]
             with os.fdopen(os.dup(transport.parent_out), 'wb') as f:
