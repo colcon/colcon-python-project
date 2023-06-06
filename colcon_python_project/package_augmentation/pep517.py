@@ -54,6 +54,8 @@ class PEP517PackageAugmentation(PackageAugmentationExtensionPoint):
             logger.warn(
                 f'An error occurred while reading metadata for {desc.name}:'
                 f" {e.stderr.strip().decode() or '(no output)'}")
+            loop.stop()
+            loop.close()
             return
         desc.dependencies.setdefault('build', set())
         desc.dependencies['build'].update(
@@ -67,6 +69,9 @@ class PEP517PackageAugmentation(PackageAugmentationExtensionPoint):
                 f'An error occurred while reading metadata for {desc.name}:'
                 f" {e.stderr.strip().decode() or '(no output)'}")
             return
+        finally:
+            loop.stop()
+            loop.close()
         desc.dependencies.setdefault('run', set())
         desc.dependencies.setdefault('test', set())
         for raw_req in metadata.get_all('Requires-Dist', ()):

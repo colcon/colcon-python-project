@@ -58,9 +58,9 @@ class PEP517PackageIdentification(PackageIdentificationExtensionPoint):
                 f'An error occurred while reading metadata for {desc.path}:'
                 f" {e.stderr.strip().decode() or '(no output)'}")
             return
-        # finally:
-        #     loop.stop()
-        #     loop.close()
+        finally:
+            loop.stop()
+            loop.close()
         name = metadata.get('Name')
         if not name:
             return
