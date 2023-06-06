@@ -72,12 +72,10 @@ class SetuptoolsDecorator(GenericDecorator):
 
     async def build_wheel(self, **kwargs):  # noqa: D102
         config_settings = kwargs.pop('config_settings', {})
-        with (
-            _ScratchEggBase(config_settings),
-            _ScratchBuildBase(config_settings),
-        ):
-            return await self._decoree.build_wheel(
-                config_settings=config_settings, **kwargs)
+        with _ScratchEggBase(config_settings):
+            with _ScratchBuildBase(config_settings):
+                return await self._decoree.build_wheel(
+                    config_settings=config_settings, **kwargs)
 
     async def get_requires_for_build_wheel(self, **kwargs):  # noqa: D102
         config_settings = kwargs.pop('config_settings', {})
