@@ -1,6 +1,7 @@
 # Copyright 2022 Open Source Robotics Foundation, Inc.
 # Licensed under the Apache License, Version 2.0
 
+import asyncio
 import logging
 from subprocess import CalledProcessError
 
@@ -45,6 +46,7 @@ class PEP517PackageAugmentation(PackageAugmentationExtensionPoint):
             return
 
         loop = new_event_loop()
+        asyncio.set_event_loop(loop)
         hook_caller = get_decorated_hook_caller(desc)
         # TODO(cottsay): get_requires_for_build_editable
         try:
@@ -54,6 +56,7 @@ class PEP517PackageAugmentation(PackageAugmentationExtensionPoint):
             logger.warn(
                 f'An error occurred while reading metadata for {desc.name}:'
                 f" {e.stderr.strip().decode() or '(no output)'}")
+            asyncio.set_event_loop(None)
             loop.stop()
             loop.close()
             return
@@ -70,6 +73,7 @@ class PEP517PackageAugmentation(PackageAugmentationExtensionPoint):
                 f" {e.stderr.strip().decode() or '(no output)'}")
             return
         finally:
+            asyncio.set_event_loop(None)
             loop.stop()
             loop.close()
         desc.dependencies.setdefault('run', set())

@@ -1,6 +1,7 @@
 # Copyright 2022 Open Source Robotics Foundation, Inc.
 # Licensed under the Apache License, Version 2.0
 
+import asyncio
 import logging
 from subprocess import CalledProcessError
 
@@ -50,6 +51,7 @@ class PEP517PackageIdentification(PackageIdentificationExtensionPoint):
                 return
 
         loop = new_event_loop()
+        asyncio.set_event_loop(loop)
         try:
             metadata = loop.run_until_complete(
                 load_and_cache_metadata(desc))
@@ -59,6 +61,7 @@ class PEP517PackageIdentification(PackageIdentificationExtensionPoint):
                 f" {e.stderr.strip().decode() or '(no output)'}")
             return
         finally:
+            asyncio.set_event_loop(None)
             loop.stop()
             loop.close()
         name = metadata.get('Name')
