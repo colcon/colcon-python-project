@@ -1,18 +1,30 @@
 # Copyright 2023 Open Source Robotics Foundation, Inc.
 # Licensed under the Apache License, Version 2.0
 
+import asyncio
 import logging
 import os
 import unittest.mock
 import warnings
 
 from colcon_core.package_descriptor import PackageDescriptor
+from colcon_core.subprocess import new_event_loop
 from colcon_python_project.hook_caller_decorator.setuptools \
     import SetuptoolsHookCallerDecoratorExtension
 import pytest
 
 from .backend_fixtures import *  # noqa: F401, F403
 from .backend_fixtures import MOCK_BACKENDS
+
+
+@pytest.fixture
+def colcon_event_loop():
+    loop = new_event_loop()
+    asyncio.set_event_loop(loop)
+    yield loop
+    loop.run_until_complete(loop.shutdown_asyncgens())
+    asyncio.set_event_loop(None)
+    loop.close()
 
 
 @pytest.fixture(autouse=True)
@@ -55,10 +67,11 @@ def static_extensions():
 
 
 @pytest.fixture
-def bench(benchmark, event_loop):
+def bench(benchmark, colcon_event_loop):
     def res(target, *args, **kwargs):
         def dut():
-            return event_loop.run_until_complete(target(*args, **kwargs))
+            return colcon_event_loop.run_until_complete(
+                target(*args, **kwargs))
         return benchmark(dut)
     return res
 
