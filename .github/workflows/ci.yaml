@@ -8,7 +8,6 @@ on:
 jobs:
   setup:
     runs-on: ubuntu-latest
-    continue-on-error: ${{ matrix.python == '3.6' }} 
     outputs:
       strategy: ${{steps.load.outputs.strategy}}
 
