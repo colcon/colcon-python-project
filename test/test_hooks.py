@@ -66,6 +66,9 @@ def test_get_requires_for_build_sdist(mock_hook_caller, bench):
 
 @pytest.mark.benchmark(group='hooks.build_editable')
 def test_build_editable(mock_hook_caller, tmp_path_factory, bench):
+    if mock_hook_caller.backend_name.startswith('setuptools.'):
+        pytest.importorskip('setuptools', minversion='64.0.0')
+
     async def dut():
         out = tmp_path_factory.mktemp('out')
         return out / await mock_hook_caller.build_editable(
@@ -76,6 +79,9 @@ def test_build_editable(mock_hook_caller, tmp_path_factory, bench):
 
 @pytest.mark.benchmark(group='hooks.get_requires_for_build_editable')
 def test_get_requires_for_build_editable(mock_hook_caller, bench):
+    if mock_hook_caller.backend_name.startswith('setuptools.'):
+        pytest.importorskip('setuptools', minversion='64.0.0')
+
     requires = bench(mock_hook_caller.get_requires_for_build_editable)
     assert isinstance(requires, list)
 
@@ -84,6 +90,9 @@ def test_get_requires_for_build_editable(mock_hook_caller, bench):
 def test_prepare_metadata_for_build_editable(
     mock_hook_caller, tmp_path_factory, bench
 ):
+    if mock_hook_caller.backend_name.startswith('setuptools.'):
+        pytest.importorskip('setuptools', minversion='64.0.0')
+
     async def dut():
         out = tmp_path_factory.mktemp('out')
         return out / \
