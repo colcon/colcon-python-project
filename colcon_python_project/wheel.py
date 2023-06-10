@@ -16,6 +16,11 @@ from zipfile import ZipFile
 from colcon_core.python_install_path import get_python_install_path
 from distlib.scripts import ScriptMaker
 
+try:
+    from importlib.metadata import Distribution
+except ImportError:
+    from importlib_metadata import Distribution
+
 
 def _get_install_path(key, install_base):
     return get_python_install_path(key, {'base': str(install_base)})
@@ -41,6 +46,37 @@ def write_and_record(libdir, path, lines):
         f'{len(raw)}')
 
 
+def remove_distributions(name, install_base):
+    """
+    Remove any installed distributions with the given name.
+
+    :param name: Name of the distribution.
+    :param install_base: Path to the base directory to uninstall from.
+    """
+    for search_path in (
+        _get_install_path('purelib', install_base),
+        _get_install_path('platlib', install_base),
+    ):
+        dirs = set()
+        for dist in Distribution.discover(name=name, path=(search_path,)):
+            for f in dist.files:
+                f_abs = f.locate()
+                try:
+                    f_abs.relative_to(search_path)
+                except ValueError:
+                    pass
+                else:
+                    f_abs.unlink()
+                    dirs.add(f_abs.parent)
+
+        while dirs:
+            d = dirs.pop()
+            if d == search_path or any(d.iterdir()):
+                continue
+            d.rmdir()
+            dirs.add(d.parent)
+
+
 def install_wheel(wheel_path, install_base, script_dir_override=None):
     """
     Install a wheel file under the given installation base directory.
@@ -60,6 +96,8 @@ def install_wheel(wheel_path, install_base, script_dir_override=None):
     wheel_file = dist_info_dir + 'WHEEL'
     record_file = dist_info_dir + 'RECORD'
     entry_points_file = dist_info_dir + 'entry_points.txt'
+
+    remove_distributions(distribution, install_base)
 
     with ZipFile(
         wheel_path, mode='r', compression=ZIP_DEFLATED, allowZip64=True

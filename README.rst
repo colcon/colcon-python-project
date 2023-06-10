@@ -9,7 +9,6 @@ Extensions for `colcon-core <https://github.com/colcon/colcon-core>`_ to work wi
 TODO
 ----
 * Graceful and informational error handling
-* Uninstall previously installed wheels before installing the newly built ones
 * More tests
 
 Idiosyncrasies
