@@ -69,6 +69,8 @@ def static_extensions():
 @pytest.fixture
 def bench(benchmark, colcon_event_loop):
     def res(target, *args, **kwargs):
+        asyncio.set_event_loop(colcon_event_loop)
+
         def dut():
             return colcon_event_loop.run_until_complete(
                 target(*args, **kwargs))
