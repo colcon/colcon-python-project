@@ -33,6 +33,7 @@ libdir
 minversion
 mktemp
 namelist
+noop
 noqa
 notset
 osfhandle
