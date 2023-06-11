@@ -13,6 +13,7 @@ import warnings
 from zipfile import ZIP_DEFLATED
 from zipfile import ZipFile
 
+from colcon_core.logging import colcon_logger
 from colcon_core.python_install_path import get_python_install_path
 from distlib.scripts import ScriptMaker
 
@@ -21,9 +22,21 @@ try:
 except ImportError:
     from importlib_metadata import Distribution
 
+logger = colcon_logger.getChild(__name__)
+
 
 def _get_install_path(key, install_base):
-    return get_python_install_path(key, {'base': str(install_base)})
+    return get_python_install_path(key, {
+        'base': str(install_base),
+        'platbase': str(install_base),
+    })
+
+
+def _get_script_maker(script_dir):
+    sm = ScriptMaker(None, script_dir)
+    sm.clobber = True
+    sm.variants = {''}
+    return sm
 
 
 def write_and_record(libdir, path, lines):
@@ -46,6 +59,88 @@ def write_and_record(libdir, path, lines):
         f'{len(raw)}')
 
 
+def enumerate_py_compiled(file):
+    """
+    Enumerate all compiled files for a Python file.
+
+    :param file: The path to an existing Python file.
+    """
+    pycache = file.parent / '__pycache__'
+    for pyc in pycache.glob(f'{file.stem}.*.pyc'):
+        if pyc.is_file():
+            yield pyc
+
+    pyc = file.with_suffix('.pyc')
+    if pyc.is_file():
+        yield pyc
+
+    pyo = file.with_suffix('.pyo')
+    if pyo.is_file():
+        yield pyo
+
+
+def enumerate_files_in_distribution(dist, install_base):
+    """
+    Enumerate all files which are part of a distribution.
+
+    :param dist: The distribution to enumerate.
+    :param install_base: The installation base directory under which the
+      distribution is installed.
+    """
+    # 1. Explicitly listed files
+    for file in dist.files:
+        file = file.locate().resolve()
+        try:
+            file.relative_to(install_base)
+        except ValueError:
+            pass
+        else:
+            if file.is_file():
+                yield file
+                if file.suffix == '.py':
+                    yield from enumerate_py_compiled(file)
+
+    # 2. Top-level packages
+    for package in dist.read_text('top_level.txt').splitlines():
+        file = dist.locate_file(f'{package}.py')
+        try:
+            file.relative_to(install_base)
+        except ValueError:
+            continue
+        if file.is_file():
+            yield file
+            yield from enumerate_py_compiled(file)
+        pkgdir = dist.locate_file(package)
+        for file in pkgdir.rglob('*'):
+            if file.is_file():
+                yield file
+
+    # 3. Entry points in console_scripts
+    scripts = dist.entry_points.select(group='console_scripts')
+    if scripts:
+        script_dir = _get_install_path('scripts', install_base)
+        sm = _get_script_maker(script_dir)
+        for script in scripts:
+            for name in sm.get_script_filenames(script.name):
+                file = script_dir / name
+                if file.is_file():
+                    yield file
+
+
+def enumerate_parent_dirs(file, base):
+    """
+    Enumerate all recursive directories under a base directory to a file.
+
+    :param file: The file under the base directory.
+    :param base: The base directory.
+
+    The base directory itself is not enumerated.
+    """
+    rel = file.parent.relative_to(base)
+    for i in range(1, len(rel.parts) + 1):
+        yield base.joinpath(*rel.parts[:i])
+
+
 def remove_distributions(name, install_base):
     """
     Remove any installed distributions with the given name.
@@ -53,28 +148,43 @@ def remove_distributions(name, install_base):
     :param name: Name of the distribution.
     :param install_base: Path to the base directory to uninstall from.
     """
-    for search_path in (
+    libdirs = [
         _get_install_path('purelib', install_base),
         _get_install_path('platlib', install_base),
-    ):
-        dirs = set()
-        for dist in Distribution.discover(name=name, path=(search_path,)):
-            for f in dist.files:
-                f_abs = f.locate()
-                try:
-                    f_abs.relative_to(search_path)
-                except ValueError:
-                    pass
-                else:
-                    f_abs.unlink()
-                    dirs.add(f_abs.parent)
+    ]
 
-        while dirs:
-            d = dirs.pop()
-            if d == search_path or any(d.iterdir()):
-                continue
-            d.rmdir()
-            dirs.add(d.parent)
+    egg_links = []
+
+    # If we find an egg-link, try to discover the distribution so that we
+    # can find and remove console scripts
+    for libdir in libdirs:
+        egg_link = libdir / f"{name.replace('_', '-')}.egg-link"
+        try:
+            with egg_link.open('r') as f:
+                link_dir = f.readline().rstrip()
+        except FileNotFoundError:
+            pass
+        else:
+            libdirs.append(egg_link.parent / link_dir)
+            egg_links.append(egg_link)
+
+    for dist in Distribution.discover(name=name, path=libdirs):
+        files = set(enumerate_files_in_distribution(dist, install_base))
+        parents = {
+            parent for file in files
+            for parent in enumerate_parent_dirs(file, install_base)}
+        for file in sorted(files):
+            logger.debug(f'Removing {file}')
+            file.unlink()
+
+        for parent in sorted(parents, reverse=True):
+            if not any(parent.iterdir()):
+                logger.debug(f'Removing {parent}/')
+                parent.rmdir()
+
+    for egg_link in sorted(egg_links):
+        logger.debug(f'Removing {egg_link}')
+        egg_link.unlink()
 
 
 def install_wheel(wheel_path, install_base, script_dir_override=None):
@@ -96,6 +206,8 @@ def install_wheel(wheel_path, install_base, script_dir_override=None):
     wheel_file = dist_info_dir + 'WHEEL'
     record_file = dist_info_dir + 'RECORD'
     entry_points_file = dist_info_dir + 'entry_points.txt'
+
+    install_base = Path(install_base)
 
     remove_distributions(distribution, install_base)
 
@@ -154,9 +266,7 @@ def install_wheel(wheel_path, install_base, script_dir_override=None):
                     script_dir = install_base / script_dir_override
                 else:
                     script_dir = _get_install_path('scripts', install_base)
-                sm = ScriptMaker(None, script_dir)
-                sm.clobber = True
-                sm.variants = {''}
+                sm = _get_script_maker(script_dir)
                 specs = [
                     '%s = %s' % pair
                     for pair in ep.items('console_scripts')
