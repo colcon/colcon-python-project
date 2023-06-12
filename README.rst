@@ -16,3 +16,11 @@ Idiosyncrasies
 * For setuptools-based packages, setuptools (< 64.0.0) will leave build artifacts in the source directory.
 * For setuptools-based packages, symlink installs always print warnings to stderr with no good way to suppress them.
 * For poetry-based packages, dependencies expressed in groups (including 'test') are not discovered (use 'test' extra as a workaround).
+
+Using This Prototype
+--------------------
+
+   $ mkdir -p ~/colcon_pyproject_ws/src && cd ~/colcon_pyproject_ws
+   $ git clone https://github.com/colcon/colcon-python-project.git -b devel src/colcon-python-project
+   $ colcon build
+   $ . install/local_setup.sh
