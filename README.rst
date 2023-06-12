@@ -20,6 +20,8 @@ Idiosyncrasies
 Using This Prototype
 --------------------
 
+.. code-block::
+
    $ mkdir -p ~/colcon_pyproject_ws/src && cd ~/colcon_pyproject_ws
    $ git clone https://github.com/colcon/colcon-python-project.git -b devel src/colcon-python-project
    $ colcon build
