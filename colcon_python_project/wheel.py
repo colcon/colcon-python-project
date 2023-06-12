@@ -126,6 +126,25 @@ def enumerate_files_in_distribution(dist, install_base):
                 if file.is_file():
                     yield file
 
+    # 4. Metadata
+    # TODO(cottsay): Wheels include metadata in dist.files, but that doesn't
+    #                appear to hold for all eggs. importlib.metadata doesn't
+    #                give us a good way to read the metadata path from a
+    #                discovered distribution, so this is a bit of a hack.
+    meta_path = getattr(dist, '_path', None)
+    if meta_path:
+        try:
+            meta_path.relative_to(install_base)
+        except ValueError:
+            pass
+        else:
+            if meta_path.is_file():
+                yield meta_path
+            else:
+                for file in meta_path.rglob('*'):
+                    if file.is_file():
+                        yield file
+
 
 def enumerate_parent_dirs(file, base):
     """
