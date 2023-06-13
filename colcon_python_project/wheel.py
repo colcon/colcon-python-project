@@ -32,8 +32,8 @@ def _get_install_path(key, install_base):
     })
 
 
-def _get_script_maker(script_dir):
-    sm = ScriptMaker(None, script_dir)
+def _get_script_maker(script_dir, dry_run=False):
+    sm = ScriptMaker(None, script_dir, dry_run=dry_run)
     sm.clobber = True
     sm.variants = {''}
     return sm
@@ -119,12 +119,15 @@ def enumerate_files_in_distribution(dist, install_base):
     scripts = dist.entry_points.select(group='console_scripts')
     if scripts:
         script_dir = _get_install_path('scripts', install_base)
-        sm = _get_script_maker(script_dir)
-        for script in scripts:
-            for name in sm.get_script_filenames(script.name):
-                file = script_dir / name
-                if file.is_file():
-                    yield file
+        sm = _get_script_maker(script_dir, dry_run=True)
+        specs = [
+            f'{script.name} = {script.value}'
+            for script in scripts
+        ]
+        for fullpath in sm.make_multiple(specs):
+            file = Path(fullpath)
+            if file.is_file():
+                yield file
 
     # 4. Metadata
     # TODO(cottsay): Wheels include metadata in dist.files, but that doesn't
@@ -172,7 +175,7 @@ def remove_distributions(name, install_base):
         _get_install_path('platlib', install_base),
     ]
 
-    egg_links = []
+    egg_links = set()
 
     # If we find an egg-link, try to discover the distribution so that we
     # can find and remove console scripts
@@ -185,7 +188,7 @@ def remove_distributions(name, install_base):
             pass
         else:
             libdirs.append(egg_link.parent / link_dir)
-            egg_links.append(egg_link)
+            egg_links.add(egg_link)
 
     for dist in Distribution.discover(name=name, path=libdirs):
         files = set(enumerate_files_in_distribution(dist, install_base))
@@ -198,7 +201,7 @@ def remove_distributions(name, install_base):
 
         for parent in sorted(parents, reverse=True):
             if not any(parent.iterdir()):
-                logger.debug(f'Removing {parent}/')
+                logger.debug(f'Removing {parent}' + os.path.sep)
                 parent.rmdir()
 
     for egg_link in sorted(egg_links):
