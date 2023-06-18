@@ -23,6 +23,7 @@ fdopen
 fdst
 fixturenames
 fsrc
+fullpath
 functools
 getfixturevalue
 hashlib
