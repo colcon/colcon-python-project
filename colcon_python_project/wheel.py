@@ -101,19 +101,21 @@ def enumerate_files_in_distribution(dist, install_base):
                     yield from enumerate_py_compiled(file)
 
     # 2. Top-level packages
-    for package in dist.read_text('top_level.txt').splitlines():
-        file = dist.locate_file(f'{package}.py')
-        try:
-            file.relative_to(install_base)
-        except ValueError:
-            continue
-        if file.is_file():
-            yield file
-            yield from enumerate_py_compiled(file)
-        pkgdir = dist.locate_file(package)
-        for file in pkgdir.rglob('*'):
+    top_level_text = dist.read_text('top_level.txt')
+    if top_level_text:
+        for package in top_level_text.splitlines():
+            file = dist.locate_file(f'{package}.py')
+            try:
+                file.relative_to(install_base)
+            except ValueError:
+                continue
             if file.is_file():
                 yield file
+                yield from enumerate_py_compiled(file)
+            pkgdir = dist.locate_file(package)
+            for file in pkgdir.rglob('*'):
+                if file.is_file():
+                    yield file
 
     # 3. Entry points in console_scripts
     scripts = dist.entry_points.select(group='console_scripts')
