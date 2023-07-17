@@ -15,15 +15,10 @@ from colcon_core.subprocess import new_event_loop
 from colcon_python_project.hook_caller_decorator \
     import get_decorated_hook_caller
 from colcon_python_project.metadata import load_and_cache_metadata
+from colcon_python_project.metadata import TEST_EXTRAS
 from distlib.util import parse_requirement
 
 logger = colcon_logger.getChild(__name__)
-
-_TEST_EXTRAS = (
-    "'test'", '"test"',
-    "'tests'", '"tests"',
-    "'testing'", '"testing"',
-)
 
 
 class PEP517PackageAugmentation(PackageAugmentationExtensionPoint):
@@ -84,7 +79,7 @@ class PEP517PackageAugmentation(PackageAugmentationExtensionPoint):
                 if (
                     req.marker['lhs'] == 'extra' and
                     req.marker['op'] == '==' and
-                    req.marker['rhs'] in _TEST_EXTRAS
+                    req.marker['rhs'] in TEST_EXTRAS
                 ):
                     desc.dependencies['test'].add(
                         create_dependency_descriptor(raw_req))
