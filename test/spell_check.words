@@ -47,6 +47,7 @@ plugin
 prepend
 purelib
 pycache
+pydocstyle
 pyproject
 pytest
 pythonpath
