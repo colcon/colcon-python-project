@@ -29,8 +29,8 @@ async def load_metadata(desc):
     """
     hook_caller = get_decorated_hook_caller(desc)
     with TemporaryDirectory() as md_dir:
-        md_name = await hook_caller.prepare_metadata_for_build_wheel(
-            metadata_directory=md_dir)
+        md_name = await hook_caller.call_hook(
+            'prepare_metadata_for_build_wheel', metadata_directory=md_dir)
         md_path = Path(md_dir) / md_name
         return Distribution.at(md_path).metadata
 

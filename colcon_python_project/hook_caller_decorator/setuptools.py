@@ -70,21 +70,16 @@ class _ScratchEggBase(TemporaryDirectory):
 class SetuptoolsDecorator(GenericDecorator):
     """Enhance hooks to the setuptools build backend."""
 
-    async def build_wheel(self, **kwargs):  # noqa: D102
+    async def call_hook(self, hook_name, **kwargs):  # noqa: D102
+        if hook_name not in (
+            'build_wheel',
+            'get_requires_for_build_wheel',
+            'prepare_metadata_for_build_wheel',
+        ):
+            return await self._decoree.call_hook(hook_name, **kwargs)
+
         config_settings = kwargs.pop('config_settings', {})
         with _ScratchEggBase(config_settings):
             with _ScratchBuildBase(config_settings):
-                return await self._decoree.build_wheel(
-                    config_settings=config_settings, **kwargs)
-
-    async def get_requires_for_build_wheel(self, **kwargs):  # noqa: D102
-        config_settings = kwargs.pop('config_settings', {})
-        with _ScratchEggBase(config_settings):
-            return await self._decoree.get_requires_for_build_wheel(
-                config_settings=config_settings, **kwargs)
-
-    async def prepare_metadata_for_build_wheel(self, **kwargs):  # noqa: D102
-        config_settings = kwargs.pop('config_settings', {})
-        with _ScratchEggBase(config_settings):
-            return await self._decoree.prepare_metadata_for_build_wheel(
-                config_settings=config_settings, **kwargs)
+                return await self._decoree.call_hook(
+                    hook_name, config_settings=config_settings, **kwargs)

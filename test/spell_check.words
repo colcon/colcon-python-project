@@ -24,7 +24,6 @@ fdst
 fixturenames
 fsrc
 fullpath
-functools
 getfixturevalue
 hashlib
 importlib
@@ -40,7 +39,6 @@ noop
 noqa
 notset
 osfhandle
-partialmethod
 pathlib
 pkgdir
 platbase

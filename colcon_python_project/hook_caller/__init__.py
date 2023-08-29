@@ -2,7 +2,6 @@
 # Licensed under the Apache License, Version 2.0
 
 from contextlib import AbstractContextManager
-from functools import partialmethod
 import os
 import pickle
 import sys
@@ -112,23 +111,6 @@ class AsyncHookCaller:
             with os.fdopen(os.dup(transport.parent_in), 'rb') as f:
                 res = pickle.load(f)
             return res
-
-    # PEP 517
-    build_wheel = partialmethod(call_hook, 'build_wheel')
-    build_sdist = partialmethod(call_hook, 'build_sdist')
-    get_requires_for_build_wheel = partialmethod(
-        call_hook, 'get_requires_for_build_wheel')
-    prepare_metadata_for_build_wheel = partialmethod(
-        call_hook, 'prepare_metadata_for_build_wheel')
-    get_requires_for_build_sdist = partialmethod(
-        call_hook, 'get_requires_for_build_sdist')
-
-    # PEP 660
-    build_editable = partialmethod(call_hook, 'build_editable')
-    get_requires_for_build_editable = partialmethod(
-        call_hook, 'get_requires_for_build_editable')
-    prepare_metadata_for_build_editable = partialmethod(
-        call_hook, 'prepare_metadata_for_build_editable')
 
 
 def get_hook_caller(desc, **kwargs):

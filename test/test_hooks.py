@@ -24,8 +24,8 @@ def mock_hook_caller(mock_project):
 def test_build_wheel(mock_hook_caller, tmp_path_factory, bench):
     async def dut():
         out = tmp_path_factory.mktemp('out')
-        return out / await mock_hook_caller.build_wheel(
-           wheel_directory=str(out))
+        return out / await mock_hook_caller.call_hook(
+           'build_wheel', wheel_directory=str(out))
     wheel = bench(dut)
     assert wheel.is_file()
 
@@ -34,15 +34,18 @@ def test_build_wheel(mock_hook_caller, tmp_path_factory, bench):
 def test_build_sdist(mock_hook_caller, tmp_path_factory, bench):
     async def dut():
         out = tmp_path_factory.mktemp('out')
-        return out / await mock_hook_caller.build_sdist(
-            sdist_directory=str(out))
+        return out / await mock_hook_caller.call_hook(
+            'build_sdist', sdist_directory=str(out))
     sdist = bench(dut)
     assert sdist.is_file()
 
 
 @pytest.mark.benchmark(group='hooks.get_requires_for_build_wheel')
 def test_get_requires_for_build_wheel(mock_hook_caller, bench):
-    requires = bench(mock_hook_caller.get_requires_for_build_wheel)
+    async def dut():
+        return await mock_hook_caller.call_hook(
+            'get_requires_for_build_wheel')
+    requires = bench(dut)
     assert isinstance(requires, list)
 
 
@@ -52,15 +55,18 @@ def test_prepare_metadata_for_build_wheel(
 ):
     async def dut():
         out = tmp_path_factory.mktemp('out')
-        return out / await mock_hook_caller.prepare_metadata_for_build_wheel(
-            metadata_directory=str(out))
+        return out / await mock_hook_caller.call_hook(
+            'prepare_metadata_for_build_wheel', metadata_directory=str(out))
     dist_info = bench(dut)
     assert dist_info.is_dir()
 
 
 @pytest.mark.benchmark(group='hooks.get_requires_for_build_sdist')
 def test_get_requires_for_build_sdist(mock_hook_caller, bench):
-    requires = bench(mock_hook_caller.get_requires_for_build_sdist)
+    async def dut():
+        return await mock_hook_caller.call_hook(
+            'get_requires_for_build_sdist')
+    requires = bench(dut)
     assert isinstance(requires, list)
 
 
@@ -71,8 +77,8 @@ def test_build_editable(mock_hook_caller, tmp_path_factory, bench):
 
     async def dut():
         out = tmp_path_factory.mktemp('out')
-        return out / await mock_hook_caller.build_editable(
-            wheel_directory=str(out))
+        return out / await mock_hook_caller.call_hook(
+            'build_editable', wheel_directory=str(out))
     wheel = bench(dut)
     assert wheel.is_file()
 
@@ -82,7 +88,11 @@ def test_get_requires_for_build_editable(mock_hook_caller, bench):
     if mock_hook_caller.backend_name.startswith('setuptools.'):
         pytest.importorskip('setuptools', minversion='64.0.0')
 
-    requires = bench(mock_hook_caller.get_requires_for_build_editable)
+    async def dut():
+        return await mock_hook_caller.call_hook(
+            'get_requires_for_build_editable')
+
+    requires = bench(dut)
     assert isinstance(requires, list)
 
 
@@ -96,7 +106,8 @@ def test_prepare_metadata_for_build_editable(
     async def dut():
         out = tmp_path_factory.mktemp('out')
         return out / \
-            await mock_hook_caller.prepare_metadata_for_build_editable(
+            await mock_hook_caller.call_hook(
+                'prepare_metadata_for_build_editable',
                 metadata_directory=str(out))
     dist_info = bench(dut)
     assert dist_info.is_dir()

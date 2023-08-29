@@ -46,7 +46,7 @@ class PEP517PackageAugmentation(PackageAugmentationExtensionPoint):
         # TODO(cottsay): get_requires_for_build_editable
         try:
             deps = loop.run_until_complete(
-                    hook_caller.get_requires_for_build_wheel())
+                hook_caller.call_hook('get_requires_for_build_wheel'))
         except CalledProcessError as e:
             logger.warn(
                 f'An error occurred while reading metadata for {desc.name}:'
