@@ -4,9 +4,14 @@
 import os
 
 from colcon_core.argument_parser import ArgumentParserDecoratorExtensionPoint
-from colcon_core.entry_point \
-    import EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE as BLOCK_VAR
 from colcon_core.plugin_system import satisfies_version
+
+try:
+    from colcon_core.extension_point \
+        import EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE as BLOCK_VAR
+except ImportError:
+    from colcon_core.entry_point \
+        import EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE as BLOCK_VAR
 
 
 class PythonProjectArgumentParserDecorator(
