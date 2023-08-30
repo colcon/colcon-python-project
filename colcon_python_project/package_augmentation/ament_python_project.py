@@ -12,7 +12,7 @@ class RosAmentPythonProjectPackageAugmentation(
 
     # Allow other augmentation extensions to perform normally and only change
     # the type at the end to allow the correct build extension to be invoked.
-    PRIORITY = 999
+    PRIORITY = 5
 
     def __init__(self):  # noqa: D107
         super().__init__()
