@@ -67,6 +67,11 @@ class AsyncHookCaller:
         """Get the name of the backend to call hooks on."""
         return self._backend_name
 
+    @property
+    def env(self):
+        """Get the environment variables to use when invoking hooks."""
+        return self._env
+
     async def list_hooks(self):
         """
         Call into the backend to list implemented hooks.
@@ -81,7 +86,7 @@ class AsyncHookCaller:
             self._backend_name]
         process = await run(
             args, None, self._stderr_callback,
-            cwd=self._project_path, env=self._env,
+            cwd=self._project_path, env=self.env,
             capture_output=True)
         process.check_returncode()
         hook_names = [
@@ -105,7 +110,7 @@ class AsyncHookCaller:
             have_callbacks = self._stdout_callback or self._stderr_callback
             process = await run(
                 args, self._stdout_callback, self._stderr_callback,
-                cwd=self._project_path, env=self._env, close_fds=False,
+                cwd=self._project_path, env=self.env, close_fds=False,
                 capture_output=not have_callbacks)
             process.check_returncode()
             with os.fdopen(os.dup(transport.parent_in), 'rb') as f:

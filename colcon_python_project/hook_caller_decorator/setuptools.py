@@ -21,6 +21,14 @@ else:
     ESCAPE_HATCH = '--build-option'
 
 
+def _add_python_warnings(env, new_warnings):
+    warnings = env.get('PYTHONWARNINGS', '').split(',')
+    for new_warning in new_warnings:
+        if new_warning not in warnings:
+            warnings.append(new_warning)
+    env['PYTHONWARNINGS'] = ','.join(warnings)
+
+
 class SetuptoolsHookCallerDecoratorExtension(
     HookCallerDecoratorExtensionPoint
 ):
@@ -38,6 +46,10 @@ class SetuptoolsHookCallerDecoratorExtension(
             'setuptools.build_meta:__legacy__',
         ):
             return hook_caller
+        _add_python_warnings(hook_caller.env, (
+            'ignore:Editable installation:setuptools.warnings.InformationOnly:'
+            'setuptools.command.editable_wheel',
+            ))
         return SetuptoolsDecorator(hook_caller)
 
 
