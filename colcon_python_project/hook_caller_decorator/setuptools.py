@@ -7,6 +7,18 @@ from colcon_core.plugin_system import satisfies_version
 from colcon_python_project.hook_caller_decorator import GenericDecorator
 from colcon_python_project.hook_caller_decorator \
     import HookCallerDecoratorExtensionPoint
+from packaging.version import Version
+
+try:
+    from setuptools import __version__ as setuptools_version
+except ImportError:
+    setuptools_version = '0'
+
+
+if Version(setuptools_version) < Version('64'):
+    ESCAPE_HATCH = '--global-option'
+else:
+    ESCAPE_HATCH = '--build-option'
 
 
 class SetuptoolsHookCallerDecoratorExtension(
@@ -37,8 +49,8 @@ class _ScratchBuildBase(TemporaryDirectory):
 
     def __enter__(self):
         temp = super().__enter__()
-        self._config_settings.setdefault('--build-option', [])
-        self._config_settings['--build-option'] += [
+        self._config_settings.setdefault(ESCAPE_HATCH, [])
+        self._config_settings[ESCAPE_HATCH] += [
             'build',
             f'--build-base={temp}',
         ]
@@ -56,8 +68,8 @@ class _ScratchEggBase(TemporaryDirectory):
 
     def __enter__(self):
         temp = super().__enter__()
-        self._config_settings.setdefault('--build-option', [])
-        self._config_settings['--build-option'] += [
+        self._config_settings.setdefault(ESCAPE_HATCH, [])
+        self._config_settings[ESCAPE_HATCH] += [
             'egg_info',
             f'--egg-base={temp}',
         ]
