@@ -11,6 +11,7 @@ from flake8.api.legacy import get_style_guide
 
 # avoid debug and info messages from flake8 internals
 LOG.setLevel(logging.WARN)
+logging.getLogger('pydocstyle').setLevel(logging.WARN)
 
 
 def test_flake8():
