@@ -58,7 +58,7 @@ class AsyncHookCaller:
         """
         self._backend_name = backend_name
         self._project_path = str(project_path) if project_path else None
-        self._env = dict(env) if env else None
+        self._env = dict(env if env is not None else os.environ)
         self._stdout_callback = stdout_callback
         self._stderr_callback = stderr_callback
 
